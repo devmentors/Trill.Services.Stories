@@ -19,6 +19,6 @@ namespace Trill.Services.Stories.Core.Entities
 
         public void Lock() => Locked = true;
 
-        public void Unlock() => Locked = true;
+        public void Unlock() => Locked = false;
     }
 }
