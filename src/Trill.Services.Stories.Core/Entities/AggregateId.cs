@@ -24,9 +24,24 @@ namespace Trill.Services.Stories.Core.Entities
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return obj.GetType() == this.GetType() && Equals((AggregateId<T>) obj);
+            return obj.GetType() == GetType() && Equals((AggregateId<T>) obj);
         }
 
         public override int GetHashCode() => EqualityComparer<T>.Default.GetHashCode(Value);
+    }
+
+    public class AggregateId : AggregateId<Guid>
+    {
+        public AggregateId() : this(Guid.NewGuid())
+        {
+        }
+        
+        public AggregateId(Guid value) : base(value)
+        {
+        }
+
+        public static implicit operator Guid(AggregateId id) => id.Value;
+
+        public static implicit operator AggregateId(Guid id) => new(id);
     }
 }

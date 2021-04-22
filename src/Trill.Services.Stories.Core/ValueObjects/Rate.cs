@@ -9,7 +9,7 @@ namespace Trill.Services.Stories.Core.ValueObjects
 
         public Rate(int value)
         {
-            if (value < -1 || value > 1)
+            if (value is < -1 or > 1)
             {
                 throw new InvalidRateException(value);
             }

@@ -9,17 +9,17 @@ namespace Trill.Services.Stories.Application.Events.External.Handlers
     internal sealed class UserCreatedHandler : IEventHandler<UserCreated>
     {
         private readonly IUserRepository _userRepository;
-        private readonly IDateTimeProvider _dateTimeProvider;
+        private readonly IClock _clock;
 
-        public UserCreatedHandler(IUserRepository userRepository, IDateTimeProvider dateTimeProvider)
+        public UserCreatedHandler(IUserRepository userRepository, IClock clock)
         {
             _userRepository = userRepository;
-            _dateTimeProvider = dateTimeProvider;
+            _clock = clock;
         }
 
         public async Task HandleAsync(UserCreated @event)
         {
-            var user = new User(@event.UserId, @event.Name, _dateTimeProvider.Now);
+            var user = new User(@event.UserId, @event.Name, _clock.Current());
             await _userRepository.AddAsync(user);
         }
     }

@@ -1,7 +1,7 @@
 namespace Trill.Services.Stories.Application.Services
 {
-    public interface IStoryIdGenerator
+    public interface IIdGenerator
     {
-        long GenerateId();
+        long Generate();
     }
 }

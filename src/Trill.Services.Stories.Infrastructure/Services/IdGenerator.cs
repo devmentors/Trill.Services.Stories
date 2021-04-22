@@ -1,14 +1,13 @@
 using System;
-using IdGen;
 using Trill.Services.Stories.Application.Services;
 
 namespace Trill.Services.Stories.Infrastructure.Services
 {
-    internal class StoryIdGenerator : IStoryIdGenerator
+    internal class IdGenerator : IIdGenerator
     {
-        private readonly IdGenerator _generator;
+        private readonly IdGen.IdGenerator _generator;
 
-        public StoryIdGenerator()
+        public IdGenerator()
         {
             var generatorId = 0;
             var generatorIdEnv = Environment.GetEnvironmentVariable("GENERATOR_ID");
@@ -17,9 +16,9 @@ namespace Trill.Services.Stories.Infrastructure.Services
                 int.TryParse(generatorIdEnv, out generatorId);
             }
             
-            _generator = new IdGenerator(generatorId);
+            _generator = new IdGen.IdGenerator(generatorId);
         }
 
-        public long GenerateId() => _generator.CreateId();
+        public long Generate() => _generator.CreateId();
     }
 }

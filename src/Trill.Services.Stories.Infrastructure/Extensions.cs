@@ -29,17 +29,19 @@ using Convey.WebApi.Swagger;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
-using Newtonsoft.Json;
+using System.Text.Json;
 using Trill.Services.Stories.Application;
 using Trill.Services.Stories.Application.Clients;
 using Trill.Services.Stories.Application.Commands;
 using Trill.Services.Stories.Application.Events.External;
 using Trill.Services.Stories.Application.Services;
+using Trill.Services.Stories.Core.Events;
 using Trill.Services.Stories.Core.Repositories;
 using Trill.Services.Stories.Infrastructure.Clients.HTTP;
 using Trill.Services.Stories.Infrastructure.Contexts;
 using Trill.Services.Stories.Infrastructure.Decorators;
 using Trill.Services.Stories.Infrastructure.Exceptions;
+using Trill.Services.Stories.Infrastructure.Kernel;
 using Trill.Services.Stories.Infrastructure.Logging;
 using Trill.Services.Stories.Infrastructure.Mongo;
 using Trill.Services.Stories.Infrastructure.Mongo.Documents;
@@ -56,9 +58,9 @@ namespace Trill.Services.Stories.Infrastructure
             builder.Services
                 .AddSingleton<IRequestStorage, RequestStorage>()
                 .AddSingleton<IStoryRequestStorage, StoryRequestStorage>()
-                .AddSingleton<IStoryIdGenerator, StoryIdGenerator>()
+                .AddSingleton<IIdGenerator, IdGenerator>()
                 .AddSingleton<RequestTypeMetricsMiddleware>()
-                .AddSingleton<IDateTimeProvider, DateTimeProvider>()
+                .AddSingleton<IClock, UtcClock>()
                 .AddScoped<IMessageBroker, MessageBroker>()
                 .AddScoped<IStoryRepository, StoryMongoRepository>()
                 .AddScoped<IStoryRatingRepository, StoryRatingMongoRepository>()
@@ -66,6 +68,7 @@ namespace Trill.Services.Stories.Infrastructure
                 .AddScoped<IUsersApiClient, UsersApiHttpClient>()
                 .AddTransient<IAppContextFactory, AppContextFactory>()
                 .AddTransient(ctx => ctx.GetRequiredService<IAppContextFactory>().Create())
+                .AddDomainEvents()
                 .AddGrpc();
 
             if (builder.GetOptions<PrometheusOptions>("prometheus").Enabled)
@@ -136,6 +139,16 @@ namespace Trill.Services.Stories.Infrastructure
             return app;
         }
         
+        private static IServiceCollection AddDomainEvents(this IServiceCollection services)
+        {
+            services.AddSingleton<IDomainEventDispatcher, DomainEventDispatcher>();
+            services.Scan(s => s.FromAssemblies(AppDomain.CurrentDomain.GetAssemblies())
+                .AddClasses(c => c.AssignableTo(typeof(IDomainEventHandler<>)))
+                .AsImplementedInterfaces()
+                .WithScopedLifetime());
+            return services;
+        }
+        
         public static long ToUnixTimeMilliseconds(this DateTime dateTime)
             => new DateTimeOffset(dateTime).ToUnixTimeMilliseconds();
 
@@ -143,9 +156,21 @@ namespace Trill.Services.Stories.Infrastructure
             => httpContext.Response.WriteAsync(httpContext.RequestServices.GetService<AppOptions>().Name);
 
         internal static CorrelationContext GetCorrelationContext(this IHttpContextAccessor accessor)
-            => accessor.HttpContext?.Request.Headers.TryGetValue("Correlation-Context", out var json) is true
-                ? JsonConvert.DeserializeObject<CorrelationContext>(json.FirstOrDefault())
-                : null;
+        {
+            if (accessor.HttpContext is null)
+            {
+                return null;
+            }
+
+            if (!accessor.HttpContext.Request.Headers.TryGetValue("Correlation-Context", out var json))
+            {
+                return null;
+            }
+
+            var value = json.FirstOrDefault();
+
+            return string.IsNullOrWhiteSpace(value) ? null : JsonSerializer.Deserialize<CorrelationContext>(value);
+        }
 
         internal static string GetSpanContext(this IMessageProperties messageProperties, string header)
         {
