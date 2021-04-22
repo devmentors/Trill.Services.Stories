@@ -2,8 +2,8 @@ using System;
 
 namespace Trill.Services.Stories.Application.Services
 {
-    public interface IDateTimeProvider
+    public interface IClock
     {
-        DateTime Now { get; }
+        DateTime Current();
     }
 }

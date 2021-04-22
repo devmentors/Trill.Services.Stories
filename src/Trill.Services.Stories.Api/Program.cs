@@ -1,4 +1,6 @@
 using System.Runtime.CompilerServices;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Convey;
 using Convey.Logging;
@@ -19,6 +21,7 @@ using Trill.Services.Stories.Infrastructure;
 
 [assembly: InternalsVisibleTo("Trill.Services.Stories.Tests.Unit")]
 [assembly: InternalsVisibleTo("Trill.Services.Stories.Tests.Integration")]
+
 namespace Trill.Services.Stories.Api
 {
     internal static class Program
@@ -33,7 +36,13 @@ namespace Trill.Services.Stories.Api
                 .ConfigureWebHostDefaults(webBuilder => webBuilder
                     .ConfigureServices(services =>
                     {
-                        services.AddControllers().AddNewtonsoftJson();
+                        services.AddControllers()
+                            .AddJsonOptions(x =>
+                            {
+                                x.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+                                x.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+                                x.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+                            });
                         services
                             .AddConvey()
                             .AddWebApi()

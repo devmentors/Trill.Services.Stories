@@ -42,7 +42,7 @@ namespace Trill.Services.Stories.Infrastructure.Mongo.Queries.Handlers
                     Highlighted = story.Highlighted
                 },
                 CreatedAt = GetDate(story.CreatedAt),
-                TotalRate = rates.Sum(x => x.Rate),
+                TotalRate = rates.Where(x => x.StoryId == story.Id).Sum(x => x.Rate),
             };
 
         private static DateTime GetDate(long timestamp) => DateTimeOffset.FromUnixTimeMilliseconds(timestamp).DateTime;

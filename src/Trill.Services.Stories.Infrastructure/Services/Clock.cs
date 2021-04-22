@@ -3,8 +3,8 @@ using Trill.Services.Stories.Application.Services;
 
 namespace Trill.Services.Stories.Infrastructure.Services
 {
-    public class DateTimeProvider : IDateTimeProvider
+    internal class UtcClock : IClock
     {
-        public DateTime Now  => DateTime.UtcNow;
+        public DateTime Current()  => DateTime.UtcNow;
     }
 }
