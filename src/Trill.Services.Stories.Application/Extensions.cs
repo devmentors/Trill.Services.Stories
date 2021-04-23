@@ -18,7 +18,6 @@ namespace Trill.Services.Stories.Application
         public static IConveyBuilder AddApplication(this IConveyBuilder builder)
         {
             builder.Services
-                .AddSingleton<IEventMapper, EventMapper>()
                 .AddScoped<IStoryRatingService, StoryRatingService>()
                 .AddSingleton<IStoryTextFactory, StoryTextFactory>()
                 .AddSingleton<IStoryAuthorPolicy, StoryAuthorPolicy>();
