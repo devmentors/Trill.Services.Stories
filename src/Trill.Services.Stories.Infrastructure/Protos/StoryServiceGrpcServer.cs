@@ -1,9 +1,7 @@
-using System;
 using System.Threading.Tasks;
 using Convey.CQRS.Commands;
 using Grpc.Core;
 using Trill.Services.Ads;
-using Trill.Services.Stories.Application.Commands;
 using Trill.Services.Stories.Application.Services;
 
 namespace Trill.Services.Stories.Infrastructure.Protos
@@ -21,16 +19,8 @@ namespace Trill.Services.Stories.Infrastructure.Protos
 
         public override async Task<SendStoryResponse> SendStory(SendStoryCommand request, ServerCallContext context)
         {
-            var command = new SendStory(default, Guid.Parse(request.UserId), request.Title,
-                request.Text, request.Tags, DateTime.Parse(request.VisibleFrom), DateTime.Parse(request.VisibleTo),
-                request.Highlighted);
-            
-            await _commandDispatcher.SendAsync(command);
-            
-            return new SendStoryResponse
-            {
-                Id = _storyRequestStorage.GetStoryId(command.Id)
-            };
+            await Task.CompletedTask;
+            return new SendStoryResponse();
         }
     }
 }
