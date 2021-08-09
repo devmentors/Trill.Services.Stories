@@ -56,6 +56,7 @@ namespace Trill.Services.Stories.Api
                         .UseDispatcherEndpoints(endpoints => endpoints
                             .Get("", ctx => ctx.GetAppName())
                             .Get<BrowseStories, PagedDto<StoryDto>>("stories")
+                            .Get<GetStory, StoryDetailsDto>("stories/{storyId}")
                             .Post<SendStory>("stories", afterDispatch: (cmd, ctx) =>
                             {
                                 var storage = ctx.RequestServices.GetRequiredService<IStoryRequestStorage>();

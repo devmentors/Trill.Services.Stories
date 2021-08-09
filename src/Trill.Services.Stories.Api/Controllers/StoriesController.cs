@@ -29,6 +29,19 @@ namespace Trill.Services.Stories.Api.Controllers
         [HttpGet]
         public async Task<ActionResult<PagedDto<StoryDto>>> Get([FromQuery] BrowseStories query)
             => Ok(await _queryDispatcher.QueryAsync(query));
+        
+        [HttpGet("{storyId:long}")]
+        public async Task<ActionResult<StoryDetailsDto>> Get(long storyId, [FromQuery] GetStory query)
+        {
+            query.StoryId = storyId;
+            var story = await _queryDispatcher.QueryAsync(query);
+            if (story is null)
+            {
+                return NotFound();
+            }
+
+            return Ok(story);
+        }
 
         [HttpPost]
         public async Task<ActionResult> Post(SendStory command)
