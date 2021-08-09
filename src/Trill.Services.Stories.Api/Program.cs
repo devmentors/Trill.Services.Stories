@@ -58,7 +58,8 @@ namespace Trill.Services.Stories.Api
                                 var storage = ctx.RequestServices.GetRequiredService<IStoryRequestStorage>();
                                 var storyId = storage.GetStoryId(cmd.Id);
                                 return ctx.Response.Created($"stories/{storyId}");
-                            })))
+                            })
+                            .Post<RateStory>("stories/{storyId}/rate")))
                     .ConfigureKestrel((_, k) =>
                     {
                         k.ListenLocalhost(5050, o => o.Protocols = HttpProtocols.Http1);
