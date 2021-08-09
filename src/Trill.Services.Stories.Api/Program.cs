@@ -14,6 +14,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Trill.Services.Stories.Application;
 using Trill.Services.Stories.Application.Commands;
+using Trill.Services.Stories.Application.DTO;
+using Trill.Services.Stories.Application.Queries;
 using Trill.Services.Stories.Application.Services;
 using Trill.Services.Stories.Infrastructure;
 
@@ -53,6 +55,7 @@ namespace Trill.Services.Stories.Api
                         .UseEndpoints(e => e.MapControllers())
                         .UseDispatcherEndpoints(endpoints => endpoints
                             .Get("", ctx => ctx.GetAppName())
+                            .Get<BrowseStories, PagedDto<StoryDto>>("stories")
                             .Post<SendStory>("stories", afterDispatch: (cmd, ctx) =>
                             {
                                 var storage = ctx.RequestServices.GetRequiredService<IStoryRequestStorage>();
