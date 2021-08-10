@@ -19,9 +19,11 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using System.Text.Json;
+using Convey.MessageBrokers.CQRS;
 using Convey.MessageBrokers.RabbitMQ;
 using Trill.Services.Stories.Application;
 using Trill.Services.Stories.Application.Clients;
+using Trill.Services.Stories.Application.Events.External;
 using Trill.Services.Stories.Application.Services;
 using Trill.Services.Stories.Core.Events;
 using Trill.Services.Stories.Core.Repositories;
@@ -82,7 +84,9 @@ namespace Trill.Services.Stories.Infrastructure
                 .UseConvey()
                 .UseMongo()
                 .UsePublicContracts<ContractAttribute>()
-                .UseCertificateAuthentication();
+                .UseCertificateAuthentication()
+                .UseRabbitMq()
+                .SubscribeEvent<UserCreated>();
 
             app.UseRouting()
                 .UseEndpoints(e => e.MapGrpcService<StoryServiceGrpcServer>());

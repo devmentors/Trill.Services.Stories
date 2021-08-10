@@ -1,6 +1,6 @@
 @url = http://localhost:5050
-@storyId = 1234567890
-@userId = dbe1396d-21a1-4228-95da-de7200a8c352
+@storyId = 874562136620138496
+@userId = 851fd537-2935-4b7c-b4b5-59011b03ceb6
 
 ###
 GET {{url}}
