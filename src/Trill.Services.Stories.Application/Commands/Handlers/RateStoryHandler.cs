@@ -11,20 +11,20 @@ namespace Trill.Services.Stories.Application.Commands.Handlers
     {
         private readonly IStoryRepository _storyRepository;
         private readonly IStoryRatingRepository _storyRatingRepository;
-        private readonly IUsersApiClient _usersApiClient;
+        private readonly IUserRepository _userRepository;
 
         public RateStoryHandler(IStoryRepository storyRepository, IStoryRatingRepository storyRatingRepository,
-            IUsersApiClient usersApiClient)
+            IUserRepository userRepository)
         {
             _storyRepository = storyRepository;
             _storyRatingRepository = storyRatingRepository;
-            _usersApiClient = usersApiClient;
+            _userRepository = userRepository;
         }
 
         public async Task HandleAsync(RateStory command)
         {
-            var userDto = await _usersApiClient.GetAsync(command.UserId);
-            if (userDto is null)
+            var user = await _userRepository.GetAsync(command.UserId);
+            if (user is null)
             {
                 throw new UserNotFoundException(command.UserId);
             }

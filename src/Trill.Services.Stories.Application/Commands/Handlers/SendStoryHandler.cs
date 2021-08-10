@@ -17,29 +17,29 @@ namespace Trill.Services.Stories.Application.Commands.Handlers
         private readonly IClock _clock;
         private readonly IIdGenerator _idGenerator;
         private readonly IStoryRequestStorage _storyRequestStorage;
-        private readonly IUsersApiClient _usersApiClient;
+        private readonly IUserRepository _userRepository;
 
         public SendStoryHandler(IStoryRepository storyRepository, IStoryTextFactory storyTextFactory,
             IClock clock, IIdGenerator idGenerator, IStoryRequestStorage storyRequestStorage,
-            IUsersApiClient usersApiClient)
+            IUserRepository userRepository)
         {
             _storyRepository = storyRepository;
             _storyTextFactory = storyTextFactory;
             _clock = clock;
             _idGenerator = idGenerator;
             _storyRequestStorage = storyRequestStorage;
-            _usersApiClient = usersApiClient;
+            _userRepository = userRepository;
         }
 
         public async Task HandleAsync(SendStory command)
         {
-            var userDto = await _usersApiClient.GetAsync(command.UserId);
-            if (userDto is null)
+            var user = await _userRepository.GetAsync(command.UserId);
+            if (user is null)
             {
                 throw new UserNotFoundException(command.UserId);
             }
             
-            var author = Author.Create(command.UserId, userDto.Name);
+            var author = Author.Create(user);
             var text = _storyTextFactory.Create(command.Text);
             var now = _clock.Current();
             var visibility = command.VisibleFrom.HasValue && command.VisibleTo.HasValue
