@@ -1,5 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Convey.CQRS.Commands;
+using Trill.Services.Stories.Application.Clients;
+using Trill.Services.Stories.Application.Exceptions;
 using Trill.Services.Stories.Application.Services;
 using Trill.Services.Stories.Core.Entities;
 using Trill.Services.Stories.Core.Factories;
@@ -15,20 +17,29 @@ namespace Trill.Services.Stories.Application.Commands.Handlers
         private readonly IClock _clock;
         private readonly IIdGenerator _idGenerator;
         private readonly IStoryRequestStorage _storyRequestStorage;
+        private readonly IUsersApiClient _usersApiClient;
 
         public SendStoryHandler(IStoryRepository storyRepository, IStoryTextFactory storyTextFactory,
-            IClock clock, IIdGenerator idGenerator, IStoryRequestStorage storyRequestStorage)
+            IClock clock, IIdGenerator idGenerator, IStoryRequestStorage storyRequestStorage,
+            IUsersApiClient usersApiClient)
         {
             _storyRepository = storyRepository;
             _storyTextFactory = storyTextFactory;
             _clock = clock;
             _idGenerator = idGenerator;
             _storyRequestStorage = storyRequestStorage;
+            _usersApiClient = usersApiClient;
         }
 
         public async Task HandleAsync(SendStory command)
         {
-            var author = Author.Create(command.UserId, $"user-{command.UserId:N}"); // Non-existent user for now
+            var userDto = await _usersApiClient.GetAsync(command.UserId);
+            if (userDto is null)
+            {
+                throw new UserNotFoundException(command.UserId);
+            }
+            
+            var author = Author.Create(command.UserId, userDto.Name);
             var text = _storyTextFactory.Create(command.Text);
             var now = _clock.Current();
             var visibility = command.VisibleFrom.HasValue && command.VisibleTo.HasValue

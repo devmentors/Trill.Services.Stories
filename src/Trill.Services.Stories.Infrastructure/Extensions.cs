@@ -21,9 +21,11 @@ using Microsoft.Extensions.DependencyInjection;
 using System.Text.Json;
 using Convey.MessageBrokers.RabbitMQ;
 using Trill.Services.Stories.Application;
+using Trill.Services.Stories.Application.Clients;
 using Trill.Services.Stories.Application.Services;
 using Trill.Services.Stories.Core.Events;
 using Trill.Services.Stories.Core.Repositories;
+using Trill.Services.Stories.Infrastructure.Clients;
 using Trill.Services.Stories.Infrastructure.Contexts;
 using Trill.Services.Stories.Infrastructure.Exceptions;
 using Trill.Services.Stories.Infrastructure.Kernel;
@@ -40,6 +42,7 @@ namespace Trill.Services.Stories.Infrastructure
         public static IConveyBuilder AddInfrastructure(this IConveyBuilder builder)
         {
             builder.Services
+                .AddTransient<IUsersApiClient, UsersApiHttpClient>()
                 .AddSingleton<IRequestStorage, RequestStorage>()
                 .AddSingleton<IStoryRequestStorage, StoryRequestStorage>()
                 .AddSingleton<IIdGenerator, IdGenerator>()
