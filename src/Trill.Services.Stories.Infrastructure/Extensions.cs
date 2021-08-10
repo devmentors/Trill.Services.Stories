@@ -66,6 +66,7 @@ namespace Trill.Services.Stories.Infrastructure
                 .AddMongo()
                 .AddRedis()
                 .AddRabbitMq()
+                .AddExceptionToFailedMessageMapper<ExceptionToFailedMessageMapper>()
                 .AddMongoRepository<StoryDocument, long>("stories")
                 .AddMongoRepository<UserDocument, Guid>("users")
                 .AddWebApiSwaggerDocs()
