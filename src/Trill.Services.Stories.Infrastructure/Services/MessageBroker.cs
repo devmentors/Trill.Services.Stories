@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Convey;
 using Convey.CQRS.Events;
 using Convey.MessageBrokers;
+using Convey.MessageBrokers.Outbox;
 using Microsoft.Extensions.Logging;
 using Trill.Services.Stories.Application.Services;
 
@@ -13,11 +14,13 @@ namespace Trill.Services.Stories.Infrastructure.Services
     internal class MessageBroker : IMessageBroker
     {
         private readonly IBusPublisher _busPublisher;
+        private readonly IMessageOutbox _outbox;
         private readonly ILogger<IMessageBroker> _logger;
 
-        public MessageBroker(IBusPublisher busPublisher, ILogger<MessageBroker> logger)
+        public MessageBroker(IBusPublisher busPublisher, IMessageOutbox outbox, ILogger<MessageBroker> logger)
         {
             _busPublisher = busPublisher;
+            _outbox = outbox;
             _logger = logger;
         }
 
@@ -39,6 +42,12 @@ namespace Trill.Services.Stories.Infrastructure.Services
 
                 var messageId = Guid.NewGuid().ToString("N");
                 _logger.LogTrace($"Publishing integration event: {@event.GetType().Name.Underscore()} [ID: '{messageId}'].");
+                if (_outbox.Enabled)
+                {
+                    await _outbox.SendAsync(@event, messageId: messageId);
+                    continue;
+                }
+                
                 await _busPublisher.PublishAsync(@event, messageId);
             }
         }

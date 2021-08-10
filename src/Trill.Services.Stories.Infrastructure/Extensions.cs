@@ -19,7 +19,11 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using System.Text.Json;
+using Convey.CQRS.Commands;
+using Convey.CQRS.Events;
 using Convey.MessageBrokers.CQRS;
+using Convey.MessageBrokers.Outbox;
+using Convey.MessageBrokers.Outbox.Mongo;
 using Convey.MessageBrokers.RabbitMQ;
 using Trill.Services.Stories.Application;
 using Trill.Services.Stories.Application.Clients;
@@ -29,6 +33,7 @@ using Trill.Services.Stories.Core.Events;
 using Trill.Services.Stories.Core.Repositories;
 using Trill.Services.Stories.Infrastructure.Clients;
 using Trill.Services.Stories.Infrastructure.Contexts;
+using Trill.Services.Stories.Infrastructure.Decorators;
 using Trill.Services.Stories.Infrastructure.Exceptions;
 using Trill.Services.Stories.Infrastructure.Kernel;
 using Trill.Services.Stories.Infrastructure.Mongo;
@@ -66,6 +71,7 @@ namespace Trill.Services.Stories.Infrastructure
                 .AddMongo()
                 .AddRedis()
                 .AddRabbitMq()
+                .AddMessageOutbox(o => o.AddMongo())
                 .AddExceptionToFailedMessageMapper<ExceptionToFailedMessageMapper>()
                 .AddMongoRepository<StoryDocument, long>("stories")
                 .AddMongoRepository<UserDocument, Guid>("users")
@@ -74,6 +80,8 @@ namespace Trill.Services.Stories.Infrastructure
                 .AddSecurity();
              
              builder.Services.AddSingleton<ICorrelationIdFactory, CorrelationIdFactory>();
+             builder.Services.TryDecorate(typeof(ICommandHandler<>), typeof(OutboxCommandHandlerDecorator<>));
+             builder.Services.TryDecorate(typeof(IEventHandler<>), typeof(OutboxEventHandlerDecorator<>));
 
              return builder;
         }
