@@ -38,6 +38,11 @@ namespace Trill.Services.Stories.Application.Commands.Handlers
             {
                 throw new UserNotFoundException(command.UserId);
             }
+
+            if (user.Locked)
+            {
+                throw new UserLockedException(command.UserId);
+            }
             
             var author = Author.Create(user);
             var text = _storyTextFactory.Create(command.Text);

@@ -29,6 +29,11 @@ namespace Trill.Services.Stories.Application.Commands.Handlers
                 throw new UserNotFoundException(command.UserId);
             }
             
+            if (user.Locked)
+            {
+                throw new UserLockedException(command.UserId);
+            }
+            
             var story = await _storyRepository.GetAsync(command.StoryId);
             if (story is null)
             {

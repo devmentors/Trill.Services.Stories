@@ -86,7 +86,9 @@ namespace Trill.Services.Stories.Infrastructure
                 .UsePublicContracts<ContractAttribute>()
                 .UseCertificateAuthentication()
                 .UseRabbitMq()
-                .SubscribeEvent<UserCreated>();
+                .SubscribeEvent<UserCreated>()
+                .SubscribeEvent<UserLocked>()
+                .SubscribeEvent<UserUnlocked>();
 
             app.UseRouting()
                 .UseEndpoints(e => e.MapGrpcService<StoryServiceGrpcServer>());
