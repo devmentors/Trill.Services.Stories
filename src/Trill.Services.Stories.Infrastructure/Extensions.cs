@@ -26,6 +26,7 @@ using Convey.MessageBrokers.Outbox;
 using Convey.MessageBrokers.Outbox.Mongo;
 using Convey.MessageBrokers.RabbitMQ;
 using Convey.MessageBrokers.RabbitMQ.Serializers;
+using Convey.Tracing.Jaeger;
 using Trill.Services.Stories.Application;
 using Trill.Services.Stories.Application.Clients;
 using Trill.Services.Stories.Application.Commands;
@@ -72,6 +73,7 @@ namespace Trill.Services.Stories.Infrastructure
                 .AddHttpClient()
                 .AddMongo()
                 .AddRedis()
+                .AddJaeger()
                 .AddRabbitMq(serializer: new NewtonsoftJsonRabbitMqSerializer())
                 .AddMessageOutbox(o => o.AddMongo())
                 .AddExceptionToFailedMessageMapper<ExceptionToFailedMessageMapper>()
