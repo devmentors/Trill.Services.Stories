@@ -25,8 +25,10 @@ using Convey.MessageBrokers.CQRS;
 using Convey.MessageBrokers.Outbox;
 using Convey.MessageBrokers.Outbox.Mongo;
 using Convey.MessageBrokers.RabbitMQ;
+using Convey.MessageBrokers.RabbitMQ.Serializers;
 using Trill.Services.Stories.Application;
 using Trill.Services.Stories.Application.Clients;
+using Trill.Services.Stories.Application.Commands;
 using Trill.Services.Stories.Application.Events.External;
 using Trill.Services.Stories.Application.Services;
 using Trill.Services.Stories.Core.Events;
@@ -70,7 +72,7 @@ namespace Trill.Services.Stories.Infrastructure
                 .AddHttpClient()
                 .AddMongo()
                 .AddRedis()
-                .AddRabbitMq()
+                .AddRabbitMq(serializer: new NewtonsoftJsonRabbitMqSerializer())
                 .AddMessageOutbox(o => o.AddMongo())
                 .AddExceptionToFailedMessageMapper<ExceptionToFailedMessageMapper>()
                 .AddMongoRepository<StoryDocument, long>("stories")
@@ -95,6 +97,7 @@ namespace Trill.Services.Stories.Infrastructure
                 .UsePublicContracts<ContractAttribute>()
                 .UseCertificateAuthentication()
                 .UseRabbitMq()
+                .SubscribeCommand<SendStory>()
                 .SubscribeEvent<UserCreated>()
                 .SubscribeEvent<UserLocked>()
                 .SubscribeEvent<UserUnlocked>();

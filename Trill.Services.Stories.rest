@@ -1,6 +1,6 @@
-@url = http://localhost:5050
+@url = http://localhost:5000/stories-service
 @storyId = 874562136620138496
-@userId = 851fd537-2935-4b7c-b4b5-59011b03ceb6
+@userId = f8f09139-0283-4b83-8e92-2d22e40f5e10
 
 ###
 GET {{url}}
@@ -12,7 +12,7 @@ GET {{url}}/stories
 GET {{url}}/stories/{{storyId}}
 
 ###
-POST {{url}}/stories
+POST {{url}}/stories/async
 Content-Type: application/json
 
 {
