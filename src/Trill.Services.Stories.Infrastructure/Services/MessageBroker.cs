@@ -4,24 +4,46 @@ using System.Linq;
 using System.Threading.Tasks;
 using Convey;
 using Convey.CQRS.Events;
+using Convey.HTTP;
 using Convey.MessageBrokers;
 using Convey.MessageBrokers.Outbox;
+using Convey.MessageBrokers.RabbitMQ;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using OpenTracing;
 using Trill.Services.Stories.Application.Services;
 
 namespace Trill.Services.Stories.Infrastructure.Services
 {
     internal class MessageBroker : IMessageBroker
     {
+        private const string DefaultSpanContextHeader = "span_context";
         private readonly IBusPublisher _busPublisher;
         private readonly IMessageOutbox _outbox;
+        private readonly ICorrelationContextAccessor _contextAccessor;
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IMessagePropertiesAccessor _messagePropertiesAccessor;
+        private readonly ICorrelationIdFactory _correlationIdFactory;
+        private readonly ITracer _tracer;
         private readonly ILogger<IMessageBroker> _logger;
+        private readonly string _spanContextHeader;
 
-        public MessageBroker(IBusPublisher busPublisher, IMessageOutbox outbox, ILogger<MessageBroker> logger)
+        public MessageBroker(IBusPublisher busPublisher, IMessageOutbox outbox,
+            ICorrelationContextAccessor contextAccessor, IHttpContextAccessor httpContextAccessor,
+            IMessagePropertiesAccessor messagePropertiesAccessor, ICorrelationIdFactory correlationIdFactory,
+            RabbitMqOptions options, ITracer tracer, ILogger<IMessageBroker> logger)
         {
             _busPublisher = busPublisher;
             _outbox = outbox;
+            _contextAccessor = contextAccessor;
+            _httpContextAccessor = httpContextAccessor;
+            _messagePropertiesAccessor = messagePropertiesAccessor;
+            _correlationIdFactory = correlationIdFactory;
+            _tracer = tracer;
             _logger = logger;
+            _spanContextHeader = string.IsNullOrWhiteSpace(options.SpanContextHeader)
+                ? DefaultSpanContextHeader
+                : options.SpanContextHeader;
         }
 
         public Task PublishAsync(params IEvent[] events) => PublishAsync(events?.AsEnumerable());
@@ -32,6 +54,19 @@ namespace Trill.Services.Stories.Infrastructure.Services
             {
                 return;
             }
+
+            var messageProperties = _messagePropertiesAccessor.MessageProperties;
+            var originatedMessageId = messageProperties?.MessageId;
+            var correlationId = _correlationIdFactory.Create();
+            var spanContext = messageProperties?.GetSpanContext(_spanContextHeader);
+            if (string.IsNullOrWhiteSpace(spanContext))
+            {
+                spanContext = _tracer.ActiveSpan is null ? string.Empty : _tracer.ActiveSpan.Context.ToString();
+            }
+
+            var correlationContext = _contextAccessor.CorrelationContext ??
+                                     _httpContextAccessor.GetCorrelationContext();
+            var headers = new Dictionary<string, object>();
 
             foreach (var @event in events)
             {
@@ -44,11 +79,13 @@ namespace Trill.Services.Stories.Infrastructure.Services
                 _logger.LogTrace($"Publishing integration event: {@event.GetType().Name.Underscore()} [ID: '{messageId}'].");
                 if (_outbox.Enabled)
                 {
-                    await _outbox.SendAsync(@event, messageId: messageId);
+                    await _outbox.SendAsync(@event, originatedMessageId, messageId, correlationId, spanContext,
+                        correlationContext, headers);
                     continue;
                 }
-                
-                await _busPublisher.PublishAsync(@event, messageId);
+
+                await _busPublisher.PublishAsync(@event, messageId, correlationId, spanContext, correlationContext,
+                    headers);
             }
         }
     }
