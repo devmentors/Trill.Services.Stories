@@ -98,6 +98,7 @@ namespace Trill.Services.Stories.Infrastructure
                 .UseCertificateAuthentication()
                 .UseRabbitMq()
                 .SubscribeCommand<SendStory>()
+                .SubscribeCommand<RateStory>()
                 .SubscribeEvent<UserCreated>()
                 .SubscribeEvent<UserLocked>()
                 .SubscribeEvent<UserUnlocked>();
