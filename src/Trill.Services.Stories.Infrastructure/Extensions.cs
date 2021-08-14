@@ -21,6 +21,8 @@ using Microsoft.Extensions.DependencyInjection;
 using System.Text.Json;
 using Convey.CQRS.Commands;
 using Convey.CQRS.Events;
+using Convey.Discovery.Consul;
+using Convey.LoadBalancing.Fabio;
 using Convey.MessageBrokers.CQRS;
 using Convey.MessageBrokers.Outbox;
 using Convey.MessageBrokers.Outbox.Mongo;
@@ -74,6 +76,8 @@ namespace Trill.Services.Stories.Infrastructure
                 .AddMongo()
                 .AddRedis()
                 .AddJaeger()
+                .AddConsul()
+                .AddFabio()
                 .AddRabbitMq(serializer: new NewtonsoftJsonRabbitMqSerializer())
                 .AddMessageOutbox(o => o.AddMongo())
                 .AddExceptionToFailedMessageMapper<ExceptionToFailedMessageMapper>()
