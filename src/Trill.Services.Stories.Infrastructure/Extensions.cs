@@ -41,6 +41,7 @@ using Trill.Services.Stories.Infrastructure.Contexts;
 using Trill.Services.Stories.Infrastructure.Decorators;
 using Trill.Services.Stories.Infrastructure.Exceptions;
 using Trill.Services.Stories.Infrastructure.Kernel;
+using Trill.Services.Stories.Infrastructure.Logging;
 using Trill.Services.Stories.Infrastructure.Mongo;
 using Trill.Services.Stories.Infrastructure.Mongo.Documents;
 using Trill.Services.Stories.Infrastructure.Mongo.Repositories;
@@ -86,7 +87,8 @@ namespace Trill.Services.Stories.Infrastructure
                 .AddWebApiSwaggerDocs()
                 .AddCertificateAuthentication()
                 .AddSecurity();
-             
+
+             builder.Services.AddScoped<LogContextMiddleware>();
              builder.Services.AddSingleton<ICorrelationIdFactory, CorrelationIdFactory>();
              builder.Services.TryDecorate(typeof(ICommandHandler<>), typeof(OutboxCommandHandlerDecorator<>));
              builder.Services.TryDecorate(typeof(IEventHandler<>), typeof(OutboxEventHandlerDecorator<>));
@@ -98,7 +100,8 @@ namespace Trill.Services.Stories.Infrastructure
 
         public static IApplicationBuilder UseInfrastructure(this IApplicationBuilder app)
         {
-            app.UseErrorHandler()
+            app.UseMiddleware<LogContextMiddleware>()
+                .UseErrorHandler()
                 .UseSwaggerDocs()
                 .UseConvey()
                 .UseMongo()
