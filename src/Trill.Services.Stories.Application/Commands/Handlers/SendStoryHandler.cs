@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Convey.CQRS.Commands;
 using Convey.MessageBrokers;
+using Microsoft.Extensions.Logging;
 using Trill.Services.Stories.Application.Clients;
 using Trill.Services.Stories.Application.Events;
 using Trill.Services.Stories.Application.Exceptions;
