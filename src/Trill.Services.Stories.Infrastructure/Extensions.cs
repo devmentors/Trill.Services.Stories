@@ -28,6 +28,7 @@ using Convey.MessageBrokers.Outbox;
 using Convey.MessageBrokers.Outbox.Mongo;
 using Convey.MessageBrokers.RabbitMQ;
 using Convey.MessageBrokers.RabbitMQ.Serializers;
+using Convey.Metrics.Prometheus;
 using Convey.Tracing.Jaeger;
 using Trill.Services.Stories.Application;
 using Trill.Services.Stories.Application.Clients;
@@ -42,6 +43,7 @@ using Trill.Services.Stories.Infrastructure.Decorators;
 using Trill.Services.Stories.Infrastructure.Exceptions;
 using Trill.Services.Stories.Infrastructure.Kernel;
 using Trill.Services.Stories.Infrastructure.Logging;
+using Trill.Services.Stories.Infrastructure.Metrics;
 using Trill.Services.Stories.Infrastructure.Mongo;
 using Trill.Services.Stories.Infrastructure.Mongo.Documents;
 using Trill.Services.Stories.Infrastructure.Mongo.Repositories;
@@ -79,6 +81,7 @@ namespace Trill.Services.Stories.Infrastructure
                 .AddJaeger()
                 .AddConsul()
                 .AddFabio()
+                .AddPrometheus()
                 .AddRabbitMq(serializer: new NewtonsoftJsonRabbitMqSerializer())
                 .AddMessageOutbox(o => o.AddMongo())
                 .AddExceptionToFailedMessageMapper<ExceptionToFailedMessageMapper>()
@@ -88,8 +91,15 @@ namespace Trill.Services.Stories.Infrastructure
                 .AddCertificateAuthentication()
                 .AddSecurity();
 
+             builder.Services.AddSingleton<RequestTotalMetricsMiddleware>();
              builder.Services.AddScoped<LogContextMiddleware>();
              builder.Services.AddSingleton<ICorrelationIdFactory, CorrelationIdFactory>();
+
+             if (builder.GetOptions<PrometheusOptions>("prometheus").Enabled)
+             {
+                 builder.Services.TryDecorate(typeof(ICommandHandler<>), typeof(MetricsCommandHandlerDecorator<>));
+             }
+             
              builder.Services.TryDecorate(typeof(ICommandHandler<>), typeof(OutboxCommandHandlerDecorator<>));
              builder.Services.TryDecorate(typeof(IEventHandler<>), typeof(OutboxEventHandlerDecorator<>));
              
@@ -100,11 +110,14 @@ namespace Trill.Services.Stories.Infrastructure
 
         public static IApplicationBuilder UseInfrastructure(this IApplicationBuilder app)
         {
-            app.UseMiddleware<LogContextMiddleware>()
+            app
+                .UseMiddleware<RequestTotalMetricsMiddleware>()
+                .UseMiddleware<LogContextMiddleware>()
                 .UseErrorHandler()
                 .UseSwaggerDocs()
                 .UseConvey()
                 .UseMongo()
+                .UsePrometheus()
                 .UsePublicContracts<ContractAttribute>()
                 .UseCertificateAuthentication()
                 .UseRabbitMq()
