@@ -104,6 +104,11 @@ namespace Trill.Services.Stories.Infrastructure
                  builder.Services.TryDecorate(typeof(ICommandHandler<>), typeof(MetricsCommandHandlerDecorator<>));
              }
              
+             if (builder.GetOptions<JaegerOptions>("jaeger").Enabled)
+             {
+                 builder.Services.TryDecorate(typeof(ICommandHandler<>), typeof(TracingCommandHandlerDecorator<>));
+             }
+             
              builder.Services.TryDecorate(typeof(ICommandHandler<>), typeof(OutboxCommandHandlerDecorator<>));
              builder.Services.TryDecorate(typeof(IEventHandler<>), typeof(OutboxEventHandlerDecorator<>));
              

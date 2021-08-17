@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using OpenTracing;
@@ -9,12 +10,25 @@ namespace Trill.Services.Stories.Infrastructure.Tracing
     internal  class TracingMiddleware : IMiddleware
     {
         private readonly ITracer _tracer;
+        
+        private static readonly ISet<string> IgnoredPaths = new HashSet<string>
+        {
+            "/metrics",
+            "/ping",
+            "/health"
+        };
 
         public TracingMiddleware(ITracer tracer)
             => _tracer = tracer;
 
         public async Task InvokeAsync(HttpContext context, RequestDelegate next)
         {
+            if (IgnoredPaths.Contains(context.Request.Path))
+            {
+                await next(context);
+                return;
+            }
+            
             using var scope = BuildScope(context);
             var span = scope.Span;
 
@@ -35,7 +49,7 @@ namespace Trill.Services.Stories.Infrastructure.Tracing
         private IScope BuildScope(HttpContext context)
         {
             var scope = _tracer
-                .BuildSpan($"handling HTTP request: ${context.Request.Path}...")
+                .BuildSpan($"handling HTTP request: {context.Request.Path}...")
                 .WithTag(Tags.HttpMethod, context.Request.Method);
 
             if (_tracer.ActiveSpan is not null)
