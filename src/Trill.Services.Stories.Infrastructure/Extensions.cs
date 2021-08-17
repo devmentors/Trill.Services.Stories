@@ -30,6 +30,7 @@ using Convey.MessageBrokers.RabbitMQ;
 using Convey.MessageBrokers.RabbitMQ.Serializers;
 using Convey.Metrics.Prometheus;
 using Convey.Tracing.Jaeger;
+using Convey.Tracing.Jaeger.RabbitMQ;
 using Trill.Services.Stories.Application;
 using Trill.Services.Stories.Application.Clients;
 using Trill.Services.Stories.Application.Commands;
@@ -82,7 +83,8 @@ namespace Trill.Services.Stories.Infrastructure
                 .AddConsul()
                 .AddFabio()
                 .AddPrometheus()
-                .AddRabbitMq(serializer: new NewtonsoftJsonRabbitMqSerializer())
+                .AddRabbitMq(serializer: new NewtonsoftJsonRabbitMqSerializer(), 
+                    plugins: registry => registry.AddJaegerRabbitMqPlugin())
                 .AddMessageOutbox(o => o.AddMongo())
                 .AddExceptionToFailedMessageMapper<ExceptionToFailedMessageMapper>()
                 .AddMongoRepository<StoryDocument, long>("stories")
@@ -117,6 +119,7 @@ namespace Trill.Services.Stories.Infrastructure
                 .UseSwaggerDocs()
                 .UseConvey()
                 .UseMongo()
+                .UseJaeger()
                 .UsePrometheus()
                 .UsePublicContracts<ContractAttribute>()
                 .UseCertificateAuthentication()
