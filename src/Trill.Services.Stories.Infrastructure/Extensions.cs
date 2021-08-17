@@ -50,6 +50,7 @@ using Trill.Services.Stories.Infrastructure.Mongo.Documents;
 using Trill.Services.Stories.Infrastructure.Mongo.Repositories;
 using Trill.Services.Stories.Infrastructure.Protos;
 using Trill.Services.Stories.Infrastructure.Services;
+using Trill.Services.Stories.Infrastructure.Tracing;
 
 namespace Trill.Services.Stories.Infrastructure
 {
@@ -94,6 +95,7 @@ namespace Trill.Services.Stories.Infrastructure
                 .AddSecurity();
 
              builder.Services.AddSingleton<RequestTotalMetricsMiddleware>();
+             builder.Services.AddSingleton<TracingMiddleware>();
              builder.Services.AddScoped<LogContextMiddleware>();
              builder.Services.AddSingleton<ICorrelationIdFactory, CorrelationIdFactory>();
 
@@ -116,6 +118,7 @@ namespace Trill.Services.Stories.Infrastructure
                 .UseMiddleware<RequestTotalMetricsMiddleware>()
                 .UseMiddleware<LogContextMiddleware>()
                 .UseErrorHandler()
+                .UseMiddleware<TracingMiddleware>()
                 .UseSwaggerDocs()
                 .UseConvey()
                 .UseMongo()
